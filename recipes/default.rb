@@ -23,6 +23,11 @@ if platform?("ubuntu", "debian")
     action :install
   end
 
+  execute "Generate locale" do
+    command "locale-gen #{node[:locale][:lang]}"
+    not_if "locale -a | grep -qx #{node[:locale][:lang]}"
+  end
+
   execute "Update locale" do
     command "update-locale LANG=#{node[:locale][:lang]}"
     not_if "cat /etc/default/locale | grep -qx LANG=#{node[:locale][:lang]}"
