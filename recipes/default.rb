@@ -17,29 +17,40 @@
 # limitations under the License.
 #
 
+lang = node[:locale][:lang]
+
 if platform?("ubuntu", "debian")
+
+  # upcase charset
+  lang = lang.gsub(/\..+$/) { |c| c.upcase }
+  # insert dashes
+  lang = lang.gsub(/\.UTF(\d+)/, '.UTF-\1')
 
   package "locales" do
     action :install
   end
 
   execute "Generate locale" do
-    command "locale-gen #{node[:locale][:lang]}"
-    not_if "locale -a | grep -qx #{node[:locale][:lang]}"
+    command "locale-gen #{lang}"
+    not_if "locale -a | grep -qx #{lang}"
   end
 
   execute "Update locale" do
-    command "update-locale LANG=#{node[:locale][:lang]}"
-    not_if "cat /etc/default/locale | grep -qx LANG=#{node[:locale][:lang]}"
+    command "update-locale LANG=#{lang}"
+    not_if "cat /etc/default/locale | grep -qx LANG=#{lang}"
   end
 
 end
 
 if platform?("redhat", "centos", "fedora")
+  # downcase charset
+  lang = lang.gsub(/\..+$/) { |c| c.downcase }
+  # remove dashes
+  lang = lang.gsub(/\.utf-(\d+)/, '.utf\1')
 
   execute "Update locale" do
-    command "locale -a | grep -qx #{node[:locale][:lang]} && sed -i 's|LANG=.*|LANG=#{node[:locale][:lang]}|' /etc/sysconfig/i18n"
-    not_if "grep -qx LANG=#{node[:locale][:lang]} /etc/sysconfig/i18n"
+    command "locale -a | grep -qx #{lang} && sed -i 's|LANG=.*|LANG=#{lang}|' /etc/sysconfig/i18n"
+    not_if "grep -qx LANG=#{lang} /etc/sysconfig/i18n"
   end
 
 end
